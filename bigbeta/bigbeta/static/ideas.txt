@@ -1,0 +1,61 @@
+Features & Bug Fixes
+_________________
+
+Unit testing
+Authenticate emails 
+Likes on feedback posts
+Comments on feedback posts
+Condense viz and add-send page
+Delete climbs
+View table data of climbs
+Combine add feedback and all feedback pages
+Timeline viz's
+Better backend db (postgres, mongo)
+Mobile version
+TR?
+Add gym selection
+Make password reset a little smoother - Redirect page while waiting for email to send
+Make it social - Friends, show friends' recent climbs, etc
+
+
+
+What this company is
+_________________
+We are an app dedicated to improving your climbing. We love data and thrive on the ideas
+    of data scientists to build innovative technology in the climbing world.
+Right now, we're focused on building an application to surface data about your climbing
+    that you can analyze to help yourself improve.
+In the future, we'll help you choose training programs based on your areas of weakness,
+    suggest styles of climbing you should work on, rate you as a climber, let you know how
+    your home gym compares to others, suggest products to help you improve your game,
+    build our own cutting edge products, and whatever else we think of down the line.
+
+
+Ideas
+_________________
+
+8/1/19
+RFID which scans a chip (in your shoe maybe?) and automatically updates your climb data
+Sell this infrastructure to gyms
+
+
+8/2/19
+Beta on gym problems?
+
+
+9/1/19
+From Andrew Monger - Take a picture of the rock to try to identify it on MP (or this app)
+
+
+12/22/19
+From Lucas: Enter an outdoor route, get training program to get there
+
+
+---------------------------
+How to make this profitable
+___
+Ads
+Selling user data to climbing / retail companies
+    Example: Based on user's performance by type, suggest different types of shoes.
+        Could also do this based on straight suggestions through the app and having partners.
+        ie, "you need aggressive shoes - here are our favorites"

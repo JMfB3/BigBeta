@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>Climbing Performance</h1>
+    <p>Check out your climbing performance here and send us any feedback through the link above!</p>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <body>
+        <svg width="700" height="500" id="boulder"></svg>
+        <script type="text/javascript" src="{{ url_for('static', filename='boulders.js') }}"></script>
+        <script type="text/javascript">
+            let bldrData = {{ bldr_json | safe }};
+            buildBoulderGraph(bldrData);
+        </script>
+
+        <svg width="700" height="500", id="sport"></svg>
+        <script type="text/javascript" src="{{ url_for('static', filename='sport_climbs.js') }}"></script>
+        <script type="text/javascript">
+            let sprtData = {{ sprt_json | safe }};
+            buildSportGraph(sprtData);
+        </script>
+
+    </body>
+{% endblock content %}

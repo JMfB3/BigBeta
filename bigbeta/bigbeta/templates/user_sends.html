@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1 class="mb-3">{{ user.username }} ({{ sends.total }})</h1>
+    {% for send in sends.items %}
+        <article class="media content-section">
+            <img class="rounded-circle article-img" src="{{ url_for('static', filename=send.author.image_file) }}">
+            <div class="media-body">
+                <div class="article-metadata">
+                    <a class="mr-2" href="{{ url_for('users.user_sends', username=send.author.username) }}">{{ send.author.username }}</a>
+                    <small class="text-muted">{{ send.date_sended.strftime("%Y-%m-%d") }}</small>
+                </div>
+                <h2><a class="article-title" href="{{ url_for('sends.send', send_id=send.id) }}">{{ send.title }}</a></h2>
+                <p class="article-content">{{ send.content }}</p>
+            </div>
+        </article>
+    {% endfor %}
+    {% for page_num in sends.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+        {% if page_num %}
+            {% if sends.page == page_num %}
+                <a class="btn btn-info mb-4" href="{{ url_for('users.user_sends', username=user.username, page=page_num) }}">{{ page_num }}</a>
+            {% else %}
+                <a class="btn btn-outline-info mb-4" href="{{ url_for('users.user_sends', username=user.username, page=page_num) }}">{{ page_num }}</a>
+            {% endif %}
+        {% else %}
+            ...
+        {% endif %}
+    {% endfor %}
+{% endblock content %}
