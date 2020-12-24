@@ -1,9 +1,4 @@
 # BigBeta
 BigBeta
 
-Site Repo
-
-# To Do in priority order
- - Move from Linode to AWS 
- - Upgrade SQLite to Postgres
- - Add Airflow repo 
+An app to partner with to analyze your climbing and send harder
