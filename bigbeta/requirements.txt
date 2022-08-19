@@ -17,7 +17,7 @@ flask-swagger==0.2.13
 Flask-WTF==0.14.2
 fuzzywuzzy
 itsdangerous==1.1.0
-Jinja2==2.10.1
+Jinja2==2.11.3
 MarkupSafe==1.1.1
 pandas
 Pillow
