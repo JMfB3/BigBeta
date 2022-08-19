@@ -60,6 +60,8 @@ class Post(db.Model):
         return f"Post('{self.title}', '{self.date_posted}')"
 
 
+# Looks like this is how you insert data to your database?
+#   I think each class is a table
 class Send(db.Model):
     """
     Send
@@ -74,3 +76,21 @@ class Send(db.Model):
 
     def __repr__(self):
         return f"Send('{self.grade}', '{self.created_at}', '{self.title}')"
+
+
+class Stocks(db.Model):
+    """
+    The idea currently is to use this as an object for a table of data.
+    The table will be a watchlist, based on morning, 5m, or 1d, containing all
+    the data that Jon loves to trade on.
+    """
+
+    id = db.Column(db.Integer, primary_key=True)
+    ticker = db.Column(db.String(8), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    rvol = db.Column(db.Numeric, nullable=False)
+    freefloat = db.Column(db.Integer, nullable=False)
+    short_interest = db.Column(db.Numeric, nullable=False)
+    si_raw = db.Column(db.Integer, nullable=False)
+    dtc = db.Column(db.Numeric, nullable=False)
+    stories = db.Column(db.Integer, nullable=False)

@@ -3,7 +3,7 @@ Main / General things
 """
 
 from flask import render_template, request, redirect, url_for, Blueprint
-from bigbeta.models import Post, Send
+from bigbeta.models import Post, Send, Stocks
 from bigbeta.users.forms import RegistrationForm
 
 

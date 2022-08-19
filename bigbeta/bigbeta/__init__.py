@@ -43,6 +43,7 @@ def create_app(config_class=Config):
     from bigbeta.posts.routes import posts
     from bigbeta.sends.routes import sends
     from bigbeta.main.routes import main
+    from bigbeta.stocks.routes import stocks
     from bigbeta.errors.handlers import errors
     from bigbeta.visualizations.routes import visualizations
     app.register_blueprint(users)
@@ -51,5 +52,6 @@ def create_app(config_class=Config):
     app.register_blueprint(main)
     app.register_blueprint(errors)
     app.register_blueprint(visualizations)
+    app.register_blueprint(stocks)
 
     return app

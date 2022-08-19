@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <h1>Watchlists</h1>
+    <p>Watchlists Here, Getchur Watchlists here!</p>
+
+    <table id="data" class="table table-striped">
+    <thead>
+      <tr>
+        <th>Ticker</th>
+        <th>Name</th>
+        <th>RVOL</th>
+        <th>Free Float</th>
+        <th>Short Interest</th>
+        <th>Short Interest Raw</th>
+        <th>Days to Cover</th>
+        <th>Recent News Stories</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+        <tr>
+          <td>{{ ticker.ticker }}</td>
+          <td>{{ ticker.name }}</td>
+          <td>{{ ticker.rvol }}</td>
+          <td>{{ ticker.freefloat }}</td>
+          <td>{{ ticker.short_interest }}</td>
+          <td>{{ ticker.si_raw }}</td>
+          <td>{{ ticker.dtc }}</td>
+          <td>{{ ticker.stories }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+{% endblock content %}
