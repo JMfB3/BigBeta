@@ -1,12 +1,13 @@
 {% extends "layout.html" %}
 
 {% block content %}
+    <head><meta http-equiv="refresh" content="300"></head>
     <h1>Watchlists</h1>
     <p>Watchlists Here, Getchur Watchlists here!</p>
 
     <table id="data" class="table table-striped">
     <thead>
-      <tr>
+      <tr>Today's Top Gainers
         <th>Ticker</th>
         <th>Name</th>
         <th>RVOL</th>
@@ -18,19 +19,20 @@
       </tr>
     </thead>
     <tbody>
-      {% for user in users %}
-        <tr>
-          <td>{{ ticker.ticker }}</td>
-          <td>{{ ticker.name }}</td>
-          <td>{{ ticker.rvol }}</td>
-          <td>{{ ticker.freefloat }}</td>
-          <td>{{ ticker.short_interest }}</td>
-          <td>{{ ticker.si_raw }}</td>
-          <td>{{ ticker.dtc }}</td>
-          <td>{{ ticker.stories }}</td>
-        </tr>
-      {% endfor %}
+        {% for stock in oneday_gainers %}
+            <tr>
+                <td>{{ stock.ticker }}</td>
+                <td>{{ stock.name }}</td>
+                <td>{{ stock.rvol }}</td>
+                <td>{{ stock.free_float }}</td>
+                <td>{{ stock.short_interest }}</td>
+                <td>{{ stock.si_raw }}</td>
+                <td>{{ stock.dtc }}</td>
+                <td>{{ stock.stories }}</td>
+            </tr>
+        {% endfor %}
     </tbody>
-  </table>
+    </table>
+
 
 {% endblock content %}
