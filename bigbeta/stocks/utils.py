@@ -5,6 +5,7 @@ import pandas as pd
 import requests
 from fuzzywuzzy import fuzz
 from flask import current_app
+from bs4 import BeautifulSoup as bs
 
 
 wb = webull()
@@ -28,23 +29,13 @@ def build_watchlist(rank_type='preMarket', wl_cnt=15, dir="gainer"):
     l_tickers = [r["ticker"]["symbol"] for r in premkt_gnrs["data"]]
     for ticker in l_tickers:
         ticker_dct = fundamentals(ticker)
-        # Print tickers as they are loaded, rather than waiting for them all
-        # tmp_l = []
-        # tmp_l.append(ticker_dct)
-        # tmp_df = pd.DataFrame(tmp_l)
-        # print(tmp_df)
         #### Add to full DF to be reported at end of processing
         l_watchlist.append(ticker_dct)
 
-    # watchlist_df = pd.DataFrame(l_watchlist)
-
-    # print(datetime.now().strftime("%H:%M:%S"))
     print(l_watchlist)
 
     return l_watchlist
 
-
-# wb.get_financials(stock='SOUN')
 
 def get_stock(ticker):
     l = []
@@ -93,10 +84,17 @@ def fundamentals(ticker):
             si_raw = si_
             si_pct = round(((int(si_) / int(fff)) * 100), 2) if fff != 0 else 0
         else:
-            si_ = 0
-            dtc = 0
-            si_raw = 0
-            si_pct = 0
+            mw_data = get_mktwatch_data(tckr=ticker)
+            print(mw_data)
+            si_raw = mw_data['si_raw']
+            dtc = mw_data['dtc']
+            # si_raw = mw_data['']
+            si_pct = mw_data['si_pct']
+
+            # si_ = 0
+            # dtc = 0
+            # si_raw = 0
+            # si_pct = 0
 
         # Get number of relevant news stories
         #   Maybe add top story to the final DF
@@ -116,12 +114,12 @@ def fundamentals(ticker):
         return ticker_dct
 
 
-def shorts_screener():
-    """
-    Build a watchlist based on short interest
-    """
-
-    yahoo_pg = requests.get("https://finance.yahoo.com/screener/predefined/most_shorted_stocks/")
+# def shorts_screener():
+#     """
+#     Build a watchlist based on short interest
+#     """
+#
+#     yahoo_pg = requests.get("https://finance.yahoo.com/screener/predefined/most_shorted_stocks/")
 
 
 def get_news(tckr, company):
@@ -149,6 +147,57 @@ def get_news(tckr, company):
         return_val = matches
 
     return return_val
+
+
+def get_mktwatch_data(tckr):
+    url = f'https://fintel.io/ss/us/{tckr}'
+    page = requests.get(url)
+    soup = bs(page.content, 'html.parser')
+    tds = soup.find_all("td")
+
+    headr = ""
+    si = 0
+    si_pct = 0
+    dtc = 0
+
+    for i in tds[:30]:
+        # Get the actual data based on the header, which is obtained in the second
+        #   part of this loop
+        if headr == "Short Interest":
+            try:
+                si_raw = int(i.contents[0].
+                    replace("\n", "").
+                    replace(" shares- ", "").
+                    replace(",", ""))
+            except:
+                si_raw = 0
+            headr = ""
+        # days to cover
+        elif headr == "Short Interest Ratio":
+            try:
+                dtc = float(i.contents[0].replace(" Days to Cover", ""))
+            except:
+                dtc = 0
+            headr = ""
+        elif headr == "Short Interest % Float":
+            # String maniuplation
+            try:
+                si_pct = float(i.contents[0].
+                replace("\n", "").
+                replace("%- ", ""))
+            except:
+                si_pct = 0
+            headr = ""
+
+        # Get the header - The next iteration should contain the data you want
+        if i.contents == ["Short Interest"]:
+            headr = "Short Interest"
+        elif i.contents == ["Short Interest Ratio"]:
+            headr = "Short Interest Ratio"
+        elif i.contents == ["Short Interest % Float"]:
+            headr = "Short Interest % Float"
+
+    return ({'dtc': dtc, 'si_raw': si_raw, 'si_pct': si_pct})
 
 
 def get_trades():
