@@ -15,11 +15,11 @@ wb_pass = os.environ.get('WB_PASS')
 if not wb_user:
     with open('/etc/config.json') as config_file:
         config = json.load(config_file)
-    wb_user = json.get('WB_USER')
+    wb_user = config.get('WB_USER')
 if not wb_pass:
     with open('/etc/config.json') as config_file:
         config = json.load(config_file)
-    wb_pass = json.get('WB_PASS')
+    wb_pass = config.get('WB_PASS')
 wb.login(username=wb_user, password=wb_pass)
 
 
