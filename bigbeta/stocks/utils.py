@@ -165,7 +165,7 @@ def get_mktwatch_data(tckr):
     tds = soup.find_all("td")
 
     headr = ""
-    si = 0
+    si_raw = 0
     si_pct = 0
     dtc = 0
 
@@ -205,6 +205,13 @@ def get_mktwatch_data(tckr):
             headr = "Short Interest Ratio"
         elif i.contents == ["Short Interest % Float"]:
             headr = "Short Interest % Float"
+
+        # if not si_raw:
+        #     si_raw = 0
+        # if not dtc:
+        #     dtc = 0
+        # if not si_pct:
+        #     si_pct = 0
 
     return ({'dtc': dtc, 'si_raw': si_raw, 'si_pct': si_pct})
 
