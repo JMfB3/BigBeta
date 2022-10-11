@@ -1,17 +1,26 @@
 import os
 import json
 from datetime import datetime, date, timedelta
-from webull import webull
+from pytz import timezone
 import pandas as pd
 import requests
 from fuzzywuzzy import fuzz
-from flask import current_app
 from bs4 import BeautifulSoup as bs
+from webull import webull
+from flask import current_app
 
 
 wb = webull()
+cur_wd = os.getcwd()
+tz = timezone("US/Eastern")
+cur_dt = datetime.strftime(datetime.now(tz), "%Y_%m_%d")
+cur_tm = datetime.strftime(datetime.now(tz), "%H_%M")
+cur_tm_log = datetime.strftime(datetime.now(tz), "%H:%M:%S")
+##########
+# Keep for dev env
 wb_user = os.environ.get('WB_USER')
 wb_pass = os.environ.get('WB_PASS')
+# Use for prod
 if not wb_user:
     with open('/etc/config.json') as config_file:
         config = json.load(config_file)
@@ -21,14 +30,27 @@ if not wb_pass:
         config = json.load(config_file)
     wb_pass = config.get('WB_PASS')
 wb.login(username=wb_user, password=wb_pass)
+########## End login block
 
 
-def build_watchlist(rank_type='preMarket', wl_cnt=15, dir="gainer"):
+def build_watchlist(wl_cnt=15, dir="gainer"):
     """
     Builds a watchlist with my fave data points. Customize by premarket, 5 min, etc
     Rank Types: preMarket / afterMarket / 5min / 1d / 5d / 1m / 3m / 52w
     """
-    ### Pre Market gainers
+
+    # Determine which watchlist to build (premarket, 1d, afterhours)
+    tz = timezone("US/Eastern")
+    rn = datetime.now(tz).time()
+    mkt_opn = datetime.strptime("08:00:00", "%H:%M:%S").time()
+    mkt_cls = datetime.strptime("16:00:00", "%H:%M:%S").time()
+    if rn < mkt_opn:
+        rank_type = "preMarket"
+    elif rn > mkt_opn and rn < mkt_cls:
+        rank_type = "1d"
+    elif rn > mkt_cls:
+        rank_type = "afterMarket"
+
     # Ping WeBull
     print('running...')
     l_watchlist = []
@@ -41,7 +63,14 @@ def build_watchlist(rank_type='preMarket', wl_cnt=15, dir="gainer"):
         #### Add to full DF to be reported at end of processing
         l_watchlist.append(ticker_dct)
 
-    print(l_watchlist)
+    # Write data out to file for storage
+    with open(f"{cur_wd}/history/dt_{cur_dt}__tm__{cur_tm}.json", "w") as f:
+        json.dump(l_watchlist, f)
+    # Write it out again to an overwritten file for easy retrieval
+    with open(f"{cur_wd}/current_run/current_data.json", "w") as f:
+        json.dump(l_watchlist, f)
+    with open(f"{cur_wd}/current_run/last_run.txt", "w") as f:
+        f.write(f"{rank_type} at {cur_tm_log} EST")
 
     return l_watchlist
 
@@ -206,22 +235,15 @@ def get_mktwatch_data(tckr):
         elif i.contents == ["Short Interest % Float"]:
             headr = "Short Interest % Float"
 
-        # if not si_raw:
-        #     si_raw = 0
-        # if not dtc:
-        #     dtc = 0
-        # if not si_pct:
-        #     si_pct = 0
-
     return ({'dtc': dtc, 'si_raw': si_raw, 'si_pct': si_pct})
 
 
-def get_trades():
-    activities = wb.get_activities()
-    l = activities['items']
-    df = pd.DataFrame(l)
+# def get_trades():
+#     activities = wb.get_activities()
+#     l = activities['items']
+#     df = pd.DataFrame(l)
+#
+#     return df
 
-    return df
-
-def death_drop(a, b):
-    return (a + b) / 2
+# def death_drop(a, b):
+#     return (a + b) / 2
