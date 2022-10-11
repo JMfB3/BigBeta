@@ -3,7 +3,7 @@
 {% block content %}
     <head><meta http-equiv="refresh" content="300"></head>
     <h1>Watchlists</h1>
-    <h4>Ran for {{ rank_type }} at: {{ run_time_display }} </h4>
+    <h4>Ran for {{ run_time_display }} </h4>
 
     <table id="data" class="table table-striped">
     <thead>
@@ -19,7 +19,7 @@
       </tr>
     </thead>
     <tbody>
-        {% for stock in oneday_gainers %}
+        {% for stock in watchlist %}
             <tr>
                 <td>{{ stock.ticker }}</td>
                 <td>{{ stock.name }}</td>
