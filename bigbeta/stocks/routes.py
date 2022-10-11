@@ -6,7 +6,6 @@ import os
 import json
 from flask import render_template, request, redirect, url_for, Blueprint
 from bigbeta import db, bcrypt
-from bigbeta.models import Stocks
 from bigbeta.stocks.utils import build_watchlist
 from datetime import datetime
 

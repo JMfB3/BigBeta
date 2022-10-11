@@ -76,39 +76,3 @@ class Send(db.Model):
 
     def __repr__(self):
         return f"Send('{self.grade}', '{self.created_at}', '{self.title}')"
-
-
-class Stocks(db.Model):
-    """
-    The idea currently is to use this as an object for a table of data.
-    The table will be a watchlist, based on morning, 5m, or 1d, containing all
-    the data that Jon loves to trade on.
-    """
-
-    id = db.Column(db.Integer, primary_key=True)
-    ticker = db.Column(db.String(8), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    rvol = db.Column(db.Numeric, nullable=False)
-    freefloat = db.Column(db.Integer, nullable=False)
-    short_interest = db.Column(db.Numeric, nullable=False)
-    si_raw = db.Column(db.Integer, nullable=False)
-    dtc = db.Column(db.Numeric, nullable=False)
-    stories = db.Column(db.Integer, nullable=False)
-
-
-class Watchlist(db.Model):
-    """
-    Data for watchlists
-    """
-
-    id = db.Column(db.Integer, primary_key=True)
-    rank_type = db.Column(db.String(15), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    ticker = db.Column(db.String(8), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    rvol = db.Column(db.Numeric, nullable=False)
-    freefloat = db.Column(db.Integer, nullable=False)
-    short_interest = db.Column(db.Numeric, nullable=False)
-    si_raw = db.Column(db.Integer, nullable=False)
-    dtc = db.Column(db.Numeric, nullable=False)
-    stories = db.Column(db.Integer, nullable=False)
