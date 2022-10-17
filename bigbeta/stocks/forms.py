@@ -27,5 +27,5 @@ class SearchForm(FlaskForm):
     Class for form to search for tickers
     """
 
-    tckr_input = StringField('Search any ticker too add to your watchlist below')
+    tckr_input = StringField('Search any ticker to add to your watchlist')
     submit = SubmitField("Search")

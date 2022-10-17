@@ -1,9 +1,23 @@
 {% extends "layout.html" %}
 {% block content %}
     <h1>BigBeta</h1>
-    <p>BigBeta is a data science company that is passionate about climbing. Our goal is to integrate tech into training in a simple way that helps you train smarter and climb harder</p>
-    <p>We're implementing features as fast as we can to make this happen. In the meantime, feel free to submit feedback so we can prioritize the features we release next, and enjoy the convenience of quickly submitting climbs and easily viewing your progress.</p>
-    <p>See you out there!</p>
-    <p> - BigBeta Team</p>
+    <div class="content-section">
+        <p>BigBeta is a big data multi-product. If you can't appreciate the pun, then idk man</p>
+        <p>We have three products in the works:</p>
+            <a class="btn btn-outline-info" href="{{ url_for('stocks.top_gainers') }}">Short interest in the stock market</a>
+            <p></p>
+            <a class="article-content">Our short interest product combines a couple popular approaches to short/mid term investing - Short squeezes and momentum trading. We're constantly monitoring the top gainers in the market - Pre Market, One Day, and After Market, and providing the current data points that are known to be indicators of high potential to move up fast. We're also working on an alerting system for these stocks, as well as auto-buying and paper trading features.</a>
+            <p></p>
+            <a class="btn btn-outline-info" href="{{ url_for('visualizations.visualization') }}">Tracking gym progress for rock climbing</a>
+            <p></p>
+            <a class="article-content">A product to help you track grades that you're sending in the gym. We're working on ways to crowd source routes and add attributes so that we recommend training programs best suited to your weaknesses</a>
+            <p></p>
+            <a class="btn btn-outline-info" href="{{ url_for('main.about') }}">Colorado 14er planning and recommendations</a>
+            <p></p>
+            <a class="article-content">Still unreleased, the BigBeta CO14er product aims to help you plan your mountaineering adventures by recommending trails based on multiple altitude weather sources</a>
+            <p></p>
+        <p>Hope you like what you see!</p>
+        <p>- BigBeta Team</p>
+    </div>
 
 {% endblock content %}
