@@ -3,10 +3,10 @@ Watchlist forms
 """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, DecimalField
+from wtforms import StringField, DecimalField, IntegerField, SubmitField
 
 
-class PreMktList(FlaskForm):
+class Watchlist(FlaskForm):
     """
     Pre Market Gainers
     """
@@ -20,3 +20,12 @@ class PreMktList(FlaskForm):
     si_raw = IntegerField('Short Interest Raw')
     dtc = DecimalField('Days to Cover')
     stories = IntegerField('Recent News Stories')
+
+
+class SearchForm(FlaskForm):
+    """
+    Class for form to search for tickers
+    """
+
+    tckr_input = StringField('Search any ticker too add to your watchlist below')
+    submit = SubmitField("Search")

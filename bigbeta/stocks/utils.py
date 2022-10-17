@@ -75,6 +75,16 @@ def build_watchlist(wl_cnt=15, dir="gainer"):
     return l_watchlist
 
 
+def search_ticker(tckr):
+    """
+    Search a single ticker
+    """
+
+    ticker_dct = fundamentals(tckr.upper())
+
+    return ticker_dct
+
+
 def get_stock(ticker):
     l = []
     f = fundamentals(ticker)
