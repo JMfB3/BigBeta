@@ -1,13 +1,12 @@
 {% extends "layout.html" %}
-
 {% block content %}
     <head><meta http-equiv="refresh" content="300"></head>
     <h1>Watchlists</h1>
-    <h4>Ran for {{ run_time_display }} </h4>
+    <h5>Ran for {{ run_time_display }} </h5>
 
     <table id="data" class="table table-striped">
     <thead>
-      <tr>Today's Top Gainers
+      <h5>Current Gainers
         <th>Ticker</th>
         <th>Name</th>
         <th>RVOL</th>
@@ -16,7 +15,7 @@
         <th>Short Interest Raw</th>
         <th>Days to Cover</th>
         <th>Recent News Stories</th>
-      </tr>
+      </h5>
     </thead>
     <tbody>
         {% for stock in watchlist %}
@@ -33,6 +32,70 @@
         {% endfor %}
     </tbody>
     </table>
+    <p>&nbsp</p>
 
+    {% if cuser_id > 0 %}
+        <!-- FIND A SINGLE TICKER -->
+        <h5>Use the searchbar to add to your own watchlist below</h5>
+        <div class='content-section'>
+            <form method="POST" action="">
+                <fieldset class="form-group">
+                    <div class="form-group">
+                        {{ search_form.tckr_input.label(class="form-control-label") }}
+
+                        {% if search_form.tckr_input.errors %}
+                            {{ search_form.tckr_input(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in search_form.tckr_input.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ search_form.tckr_input(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ search_form.submit(class="btn btn-outline-info")}}
+                    </div>
+                </fieldset>
+                {{ search_form.hidden_tag() }}
+            </form>
+        </div>
+    <!-- ------------------------------------------------------------- -->
+    <!-- HERE BE THE TABLE -->
+        <table id="data_search_ticker" class="table table-striped">
+        <thead>
+          <h5>Your Watchlist
+            <th>Ticker</th>
+            <th>Name</th>
+            <th>RVOL</th>
+            <th>Free Float</th>
+            <th>Short Interest</th>
+            <th>Short Interest Raw</th>
+            <th>Days to Cover</th>
+            <th>Recent News Stories</th>
+          </h5>
+        </thead>
+        <tbody>
+            {% for i in search_list %}
+                <tr>
+                    <td>{{ i.ticker }}</td>
+                    <td>{{ i.name }}</td>
+                    <td>{{ i.rvol }}</td>
+                    <td>{{ i.free_float }}</td>
+                    <td>{{ i.short_interest }}</td>
+                    <td>{{ i.si_raw }}</td>
+                    <td>{{ i.dtc }}</td>
+                    <td>{{ i.stories }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+
+    {% else %}
+        <a class="ml-2" href="{{ url_for('users.login') }}">Login</a> or<a class="ml-2" href="{{ url_for('users.register') }}">Create an Account</a>
+        <p>to create watchlists and get on our alerts list - We'll let you know when companies with great Short Interest, Float, and Days to Cover ratios start to move.</p>
+        <p>&nbsp</p>
+    {% endif %}
 
 {% endblock content %}

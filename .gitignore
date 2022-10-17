@@ -1,2 +1,4 @@
 bigbeta/config.py
 bigbeta/stocks/history/*
+bigbeta/site.db
+bigbeta/user_search/*
