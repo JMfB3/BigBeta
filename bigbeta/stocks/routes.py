@@ -11,7 +11,7 @@ from flask_login import current_user, login_required
 
 from bigbeta import db, bcrypt
 from bigbeta.stocks.forms import SearchForm
-from bigbeta.stocks.utils import search_ticker
+from bigbeta.stocks.utils import search_ticker, remove_from_watchlist
 
 
 stocks = Blueprint('stocks', __name__)
@@ -44,10 +44,24 @@ def top_gainers():
     # Get search data
     search_form = SearchForm()
     if search_form.validate_on_submit():
-        search_list.append(search_ticker(search_form.tckr_input.data))
+        print("running search form")
+        # Remove the ticker from the current watchlist.
+        #   Then load the file as a list
+        #   Then add the updated data of the searched stock to the list
+        #   Then write the new list to the user search file, which will be loaded on redirect
+        remove_from_watchlist(search_form.tckr_input.data)
+        with open(f"{cur_wd}/bigbeta/stocks/user_search/{current_user.id}_searches.json", "r") as f:
+            updated_search_list = json.load(f)
+        updated_search_list.append(search_ticker(search_form.tckr_input.data))
         with open(f"{cur_wd}/bigbeta/stocks/user_search/{current_user.id}_searches.json", "w") as f:
-            json.dump(search_list, f)
+            json.dump(updated_search_list, f)
         return redirect(url_for("stocks.top_gainers"))
+
+    # rm_form = RemoveStockForm()
+    # if rm_form.validate_on_submit():
+    #     print("submittd rm form")
+    #     remove_from_watchlist(rm_form.tckr_input.data)
+    #     return redirect(url_for("stocks.top_gainers"))
 
     return render_template(
         'stocks.html',
@@ -57,3 +71,14 @@ def top_gainers():
         search_form=search_form,
         cuser_id=cuser_id
         )
+
+
+@stocks.route("/stocks/rmfw", methods=["GET", "POST"])
+def top_gainers_rm_from_watchlist_redirect(tckr):
+    """
+    Runs the remove from watchlist function, then loads the top_gainers page
+    """
+
+    print("running rm from watchlst")
+    remove_from_watchlist(tckr)
+    return redirect(url_for("stocks.top_gainers"))

@@ -7,14 +7,17 @@
     <table id="data" class="table table-striped">
     <thead>
       <h5>Current Gainers
-        <th>Ticker</th>
-        <th>Name</th>
-        <th>RVOL</th>
-        <th>Free Float</th>
-        <th>Short Interest</th>
-        <th>Short Interest Raw</th>
-        <th>Days to Cover</th>
-        <th>Recent News Stories</th>
+          <th>Ticker</th>
+          <th>Name</th>
+          <th>RVOL</th>
+          <th>Avg Vol</th>
+          <th>Free Float</th>
+          <th>Short Interest</th>
+          <th>Short Interest Raw</th>
+          <th>Days to Cover</th>
+          <th>Recent News Stories</th>
+          <th>Grade</th>
+          <th>Date Added</th>
       </h5>
     </thead>
     <tbody>
@@ -22,12 +25,15 @@
             <tr>
                 <td>{{ stock.ticker }}</td>
                 <td>{{ stock.name }}</td>
-                <td>{{ stock.rvol }}</td>
-                <td>{{ stock.free_float }}</td>
-                <td>{{ stock.short_interest }}</td>
-                <td>{{ stock.si_raw }}</td>
+                <td>{{ stock.rvol }}x</td>
+                <td>{{ stock.display_avg_vol }}</td>
+                <td>{{ stock.display_free_float }}</td>
+                <td>{{ stock.display_short_interest }}</td>
+                <td>{{ stock.display_si_raw }}</td>
                 <td>{{ stock.dtc }}</td>
                 <td>{{ stock.stories }}</td>
+                <td>{{ stock.stock_grade}} / 10</td>
+                <td>{{ stock.date_added }}</td>
             </tr>
         {% endfor %}
     </tbody>
@@ -38,7 +44,7 @@
         <!-- FIND A SINGLE TICKER -->
         <h5>Use the searchbar to add to your own watchlist below</h5>
         <div class='content-section'>
-            <form method="POST" action="">
+            <form id="search_form" method="POST" action="">
                 <fieldset class="form-group">
                     <div class="form-group">
                         {{ search_form.tckr_input.label(class="form-control-label") }}
@@ -69,11 +75,15 @@
             <th>Ticker</th>
             <th>Name</th>
             <th>RVOL</th>
+            <th>Avg Vol</th>
             <th>Free Float</th>
             <th>Short Interest</th>
             <th>Short Interest Raw</th>
             <th>Days to Cover</th>
             <th>Recent News Stories</th>
+            <th>Grade</th>
+            <th>Date Added</th>
+            <th>Delete</th>
           </h5>
         </thead>
         <tbody>
@@ -81,17 +91,20 @@
                 <tr>
                     <td>{{ i.ticker }}</td>
                     <td>{{ i.name }}</td>
-                    <td>{{ i.rvol }}</td>
-                    <td>{{ i.free_float }}</td>
-                    <td>{{ i.short_interest }}</td>
-                    <td>{{ i.si_raw }}</td>
+                    <td>{{ i.rvol }}x</td>
+                    <td>{{ i.display_avg_vol }}</td>
+                    <td>{{ i.display_free_float }}</td>
+                    <td>{{ i.display_short_interest }}</td>
+                    <td>{{ i.display_si_raw }}</td>
                     <td>{{ i.dtc }}</td>
                     <td>{{ i.stories }}</td>
+                    <td>{{ i.stock_grade}}/10</td>
+                    <td>{{ i.date_added }}</td>
+                    <td><a class="btn btn-outline-info" href="{{ url_for('stocks.top_gainers_rm_from_watchlist_redirect', tckr=i.ticker) }}">Remove</a></td>
                 </tr>
             {% endfor %}
         </tbody>
         </table>
-
     {% else %}
         <a class="ml-2" href="{{ url_for('users.login') }}">Login</a> or<a class="ml-2" href="{{ url_for('users.register') }}">Create an Account</a>
         <p>to create watchlists and get on our alerts list - We'll let you know when companies with great Short Interest, Float, and Days to Cover ratios start to move.</p>
