@@ -8,6 +8,7 @@ from fuzzywuzzy import fuzz
 from bs4 import BeautifulSoup as bs
 from webull import webull
 from flask import current_app
+from flask_login import current_user
 
 
 wb = webull()
@@ -69,6 +70,7 @@ def build_watchlist(wl_cnt=15, dir="gainer"):
     # Write it out again to an overwritten file for easy retrieval
     with open(f"{cur_wd}/current_run/current_data.json", "w") as f:
         json.dump(l_watchlist, f)
+    # Writes out time of last run
     with open(f"{cur_wd}/current_run/last_run.txt", "w") as f:
         f.write(f"{rank_type} at {cur_tm_log} EST")
 
@@ -80,9 +82,35 @@ def search_ticker(tckr):
     Search a single ticker
     """
 
+    print("running search_ticker function")
+    # Get up-to-date data on the stock
     ticker_dct = fundamentals(tckr.upper())
 
     return ticker_dct
+
+
+def remove_from_watchlist(tckr_to_rm):
+    """
+    Removes a ticker from the current user's watchlist
+    """
+
+    # Get current list
+    print("running remove_from_watchlist function")
+    try:
+        with open(f"{cur_wd}/bigbeta/stocks/user_search/{current_user.id}_searches.json", "r") as f:
+            search_list = json.load(f)
+    except:
+        search_list = []
+
+    overwrite_list = []
+    for tckr in search_list:
+        if not tckr_to_rm.upper() == tckr['ticker'].upper():
+            overwrite_list.append(tckr)
+
+    with open(f"{cur_wd}/bigbeta/stocks/user_search/{current_user.id}_searches.json", "w") as f:
+        json.dump(overwrite_list, f)
+
+    return overwrite_list
 
 
 def get_stock(ticker):
@@ -114,6 +142,10 @@ def fundamentals(ticker):
             cnm = qts['name']
         except KeyError:
             cnm = 0
+        try:
+            open_price = qts['open']
+        except KeyError:
+            open_price = 0
         # Manipulate as needed
         ### Free float
         ffs = round((int(fff) / 1000000), 2)
@@ -136,38 +168,62 @@ def fundamentals(ticker):
             print(mw_data)
             si_raw = mw_data['si_raw']
             dtc = mw_data['dtc']
-            # si_raw = mw_data['']
             si_pct = mw_data['si_pct']
-
-            # si_ = 0
-            # dtc = 0
-            # si_raw = 0
-            # si_pct = 0
 
         # Get number of relevant news stories
         #   Maybe add top story to the final DF
         news_stories = get_news(ticker, cnm)
 
+        # Create a grade for the stock
+        grade = 0
+        # dicts for grades
+        rvol_grades = [1, 2, 5, 10]
+        rvol_grade = 0
+        for grade in rvol_grades:
+            rvol_grade += (1 / len(rvol_grades)) if rvol >= grade else 0
+        ff_grades = [50, 25, 10, 5, 1]
+        ff_grade = 0
+        for grade in ff_grades:
+            ff_grade += (1 / len(ff_grades)) if ffs <= grade else 0
+        si_grades = [10, 20, 50, 100]
+        si_grade = 0
+        for grade in si_grades:
+            si_grade += (1 / len(si_grades)) if si_pct >= grade else 0
+        dtc_grades = [1, 2.5, 5, 7.5, 10]
+        dtc_grade = 0
+        for grade in dtc_grades:
+            dtc_grade += (1 / len(dtc_grades)) if dtc >= grade else 0
+        news_grades = [0, 1]
+        news_grade = 0
+        for grade in news_grades:
+            news_grade += (1 / len(news_grades)) if news_stories > grade else 0
+
+        stock_grade = round((rvol_grade + ff_grade + si_grade + dtc_grade + news_grade), 2) * 2
+
         ticker_dct = {
             'ticker': ticker,
             'name': cnm,
             'rvol': rvol,
-            'free_float': f"{str(ffs)}M",
-            'short_interest': f"{str(si_pct)}%",
-            'si_raw': "{:,}".format(int(si_raw)),
+            'rvol_grade': rvol_grade,
+            'avg_vol': int(avg_vol),
+            'display_avg_vol': "{:,}".format(int(avg_vol)),
+            'display_free_float': f"{str(ffs)}M",
+            'free_float': ffs,
+            'ff_grade': ff_grade,
+            'display_short_interest': f"{str(si_pct)}%",
+            'short_interest': si_pct,
+            'si_grade': si_grade,
+            'display_si_raw': "{:,}".format(int(si_raw)),
+            'si_raw': si_raw,
             'dtc': dtc,
+            'dtc_grade': dtc_grade,
             'stories': news_stories,
+            'news_grade': news_grade,
+            'stock_grade': stock_grade,
+            'date_added': datetime.strftime(datetime.now(tz), "%m/%d/%Y")
             }
 
         return ticker_dct
-
-
-# def shorts_screener():
-#     """
-#     Build a watchlist based on short interest
-#     """
-#
-#     yahoo_pg = requests.get("https://finance.yahoo.com/screener/predefined/most_shorted_stocks/")
 
 
 def get_news(tckr, company):
