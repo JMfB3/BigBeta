@@ -57,12 +57,6 @@ def top_gainers():
             json.dump(updated_search_list, f)
         return redirect(url_for("stocks.top_gainers"))
 
-    # rm_form = RemoveStockForm()
-    # if rm_form.validate_on_submit():
-    #     print("submittd rm form")
-    #     remove_from_watchlist(rm_form.tckr_input.data)
-    #     return redirect(url_for("stocks.top_gainers"))
-
     return render_template(
         'stocks.html',
         watchlist=watchlist,

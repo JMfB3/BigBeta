@@ -3,7 +3,7 @@ Watchlist forms
 """
 
 from flask_wtf import FlaskForm
-from wtforms import Field, StringField, DecimalField, IntegerField, SubmitField
+from wtforms import StringField, DecimalField, IntegerField, SubmitField
 
 
 class Watchlist(FlaskForm):
@@ -29,11 +29,3 @@ class SearchForm(FlaskForm):
 
     tckr_input = StringField('Search any ticker to add to your watchlist')
     submit = SubmitField("Search")
-
-
-# class RemoveStockForm(FlaskForm):
-#     """
-#     Just trying to create a button to remove a table item
-#     """
-#     tckr_input = StringField()
-#     submit = SubmitField("Remove")
