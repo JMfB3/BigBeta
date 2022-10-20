@@ -68,11 +68,10 @@ def top_gainers():
 
 
 @stocks.route("/stocks/rmfw", methods=["GET", "POST"])
-def top_gainers_rm_from_watchlist_redirect(tckr):
+def top_gainers_rm_from_watchlist_redirect():
     """
     Runs the remove from watchlist function, then loads the top_gainers page
     """
-
-    print("running rm from watchlst")
+    tckr = request.args.get("tckr")
     remove_from_watchlist(tckr)
     return redirect(url_for("stocks.top_gainers"))

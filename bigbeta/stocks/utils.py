@@ -53,10 +53,8 @@ def build_watchlist(wl_cnt=15, dir="gainer"):
         rank_type = "afterMarket"
 
     # Ping WeBull
-    print('running...')
     l_watchlist = []
     premkt_gnrs = wb.active_gainer_loser(direction=dir, rank_type=rank_type, count=wl_cnt)
-    # Odd wb output requires some data maniuplation
     ### Must dig into list within list
     l_tickers = [r["ticker"]["symbol"] for r in premkt_gnrs["data"]]
     for ticker in l_tickers:
@@ -82,7 +80,6 @@ def search_ticker(tckr):
     Search a single ticker
     """
 
-    print("running search_ticker function")
     # Get up-to-date data on the stock
     ticker_dct = fundamentals(tckr.upper())
 
@@ -94,8 +91,6 @@ def remove_from_watchlist(tckr_to_rm):
     Removes a ticker from the current user's watchlist
     """
 
-    # Get current list
-    print("running remove_from_watchlist function")
     try:
         with open(f"{cur_wd}/bigbeta/stocks/user_search/{current_user.id}_searches.json", "r") as f:
             search_list = json.load(f)
@@ -118,8 +113,6 @@ def get_stock(ticker):
     f = fundamentals(ticker)
     l.append(f)
     fdf = pd.DataFrame(l)
-    print(datetime.now().strftime("%H:%M:%S"))
-    print(fdf)
     return fdf
 
 def fundamentals(ticker):
@@ -154,6 +147,13 @@ def fundamentals(ticker):
             rvol = round(int(vol) / int(avg_vol), 2)
         except ZeroDivisionError:
             rvol = 0
+        # avg_vol display
+        if int(avg_vol) > 1000000:
+            avs = round((int(avg_vol) / 1000000), 2)
+            display_avg_vol = f"{str(avs)}M"
+        else:
+            avs = round((int(avg_vol) / 1000), 2)
+            display_avg_vol = f"{str(avs)}K"
 
         # Get SI data
         sis = wb.get_short_interest(stock=ticker)
@@ -165,7 +165,6 @@ def fundamentals(ticker):
             si_pct = round(((int(si_) / int(fff)) * 100), 2) if fff != 0 else 0
         else:
             mw_data = get_mktwatch_data(tckr=ticker)
-            print(mw_data)
             si_raw = mw_data['si_raw']
             dtc = mw_data['dtc']
             si_pct = mw_data['si_pct']
@@ -206,7 +205,7 @@ def fundamentals(ticker):
             'rvol': rvol,
             'rvol_grade': rvol_grade,
             'avg_vol': int(avg_vol),
-            'display_avg_vol': "{:,}".format(int(avg_vol)),
+            'display_avg_vol': display_avg_vol,
             'display_free_float': f"{str(ffs)}M",
             'free_float': ffs,
             'ff_grade': ff_grade,
