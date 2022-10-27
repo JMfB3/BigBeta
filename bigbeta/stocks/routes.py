@@ -11,12 +11,7 @@ from flask_login import current_user, login_required
 
 from bigbeta import db, bcrypt
 from bigbeta.stocks.forms import SearchForm
-from bigbeta.stocks.utils import (
-    search_ticker,
-    remove_from_watchlist,
-    build_users_list,
-    stock_email_blast
-    )
+from bigbeta.stocks.utils import search_ticker, remove_from_watchlist
 
 
 stocks = Blueprint('stocks', __name__)
@@ -68,7 +63,7 @@ def top_gainers():
         run_time_display=run_time_display,
         search_list=search_list,
         search_form=search_form,
-        cuser_id=cuser_id,
+        cuser_id=cuser_id
         )
 
 
@@ -80,15 +75,3 @@ def top_gainers_rm_from_watchlist_redirect():
     tckr = request.args.get("tckr")
     remove_from_watchlist(tckr)
     return redirect(url_for("stocks.top_gainers"))
-
-
-# @stocks.route("/stocks/email_blast/<ticker>" methods=["GET,", "POST"])
-# def email_notification_page():
-#     """
-#     Page to be called by cron job for email blasts.
-#     This is required in order for emails and user queries to be used within the app context
-#     """
-#     tckr = request.args.get("ticker")
-#     users = User.query.all()
-#     stock_email_blast()
-#     return None

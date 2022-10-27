@@ -1,6 +1,5 @@
 import os
 import json
-import sqlite3
 from datetime import datetime, date, timedelta
 from pytz import timezone
 import requests
@@ -13,8 +12,6 @@ from flask import current_app
 from flask_login import current_user
 from flask_mail import Message
 
-# from bigbeta import db
-# from bigbeta.models import User
 from bigbeta import create_app_context
 from bigbeta import mail
 from bigbeta.models import User
@@ -47,7 +44,6 @@ if not email_sender:
 wb.login(username=wb_user, password=wb_pass)
 ########## End login block
 
-print('EMAIL SENDER: ', email_sender)
 # Set app context
 bigbeta_app = create_app_context()
 
@@ -133,6 +129,7 @@ def get_stock(ticker):
     fdf = pd.DataFrame(l)
     return fdf
 
+
 def fundamentals(ticker):
     # Gets main data points about a selected ticker
         qts = wb.get_quote(stock=ticker)
@@ -192,7 +189,6 @@ def fundamentals(ticker):
             si_pct = mw_data['si_pct']
 
         # Get number of relevant news stories
-        #   Maybe add top story to the final DF
         news_stories = get_news(ticker, cnm)
 
         # Create a grade for the stock
@@ -339,7 +335,7 @@ def analyze_watchlist():
     # Open current watchlist, create new list finding stocks with >100% short interest
     with open(f"{cur_wd}/bigbeta/stocks/current_run/current_data.json", "r") as f:
         watchlist = json.load(f)
-    outrageous_stocks = [stock for stock in watchlist if stock['short_interest'] > 10]
+    outrageous_stocks = [stock for stock in watchlist if stock['short_interest'] > 100]
     notification_time = datetime.strftime(datetime.now(tz), "%H:%M")
 
     # Find all outrageous files from today, pull all tickers from them, and if
