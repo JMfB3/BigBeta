@@ -3,7 +3,7 @@ from flask import current_app
 from datetime import datetime
 from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-#test comment
+
 
 @login_manager.user_loader
 def load_user(user_id):
