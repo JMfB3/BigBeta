@@ -6,6 +6,15 @@ from flask_mail import Message
 from bigbeta import mail
 
 
+# Keep for dev env
+email_sender = os.environ.get('EMAIL_USER')
+# Use for prod
+if not email_sender:
+    with open('/etc/config.json') as config_file:
+        config = json.load(config_file)
+    email_sender = config.get('EMAIL_USER')
+
+
 def save_picture(form_picture):
     """
     Saves a profile photo
@@ -27,7 +36,7 @@ def save_picture(form_picture):
 def send_reset_email(user):
     token = user.get_reset_token()
     msg = Message('Password Reset Request',
-                  sender='noreply@demo.com',
+                  sender=email_sender,
                   recipients=[user.email])
     msg.body = f"""\
 To reset your password, visit the following link

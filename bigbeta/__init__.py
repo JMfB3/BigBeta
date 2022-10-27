@@ -31,6 +31,10 @@ mail = Mail()
 
 
 def create_app(config_class=Config):
+    """
+    Creates app
+    """
+
     app = Flask(__name__)
     app.config.from_object(Config)
 
@@ -53,5 +57,21 @@ def create_app(config_class=Config):
     app.register_blueprint(errors)
     app.register_blueprint(visualizations)
     app.register_blueprint(stocks)
+
+    return app
+
+
+def create_app_context(confif_class=Config):
+    """
+    Creates app context for use by cron jobs or other external services.
+        Using the above create_app function will result in circular import errors 
+    """
+    app = Flask(__name__)
+    app.config.from_object(Config)
+
+    db.init_app(app)
+    bcrypt.init_app(app)
+    login_manager.init_app(app)
+    mail.init_app(app)
 
     return app
