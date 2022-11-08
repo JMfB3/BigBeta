@@ -4,13 +4,14 @@ from datetime import datetime, date, timedelta
 from pytz import timezone
 import requests
 
+from flask import current_app
+from flask_login import current_user
+from flask_mail import Message
 import pandas as pd
 from fuzzywuzzy import fuzz
 from bs4 import BeautifulSoup as bs
 from webull import webull
-from flask import current_app
-from flask_login import current_user
-from flask_mail import Message
+import yfinance as yf
 
 from bigbeta import create_app_context
 from bigbeta import mail
@@ -131,119 +132,100 @@ def get_stock(ticker):
 
 
 def fundamentals(ticker):
-    # Gets main data points about a selected ticker
-        qts = wb.get_quote(stock=ticker)
-        # Retrieve basic data
-        try:
-            avg_vol = qts['avgVol3M']
-        except KeyError:
-            avg_vol = 0
-        try:
-            vol = qts['volume']
-        except KeyError:
-            vol = 0
-        try:
-            fff = qts['outstandingShares']
-        except KeyError:
-            fff = 0
-        try:
-            cnm = qts['name']
-        except KeyError:
-            cnm = 0
-        try:
-            open_price = qts['open']
-        except KeyError:
-            open_price = 0
-        try:
-            last_price = qts['pPrice']
-        except KeyError:
-            last_price = 0
-        # Manipulate as needed
-        ### Free float
-        ffs = round((int(fff) / 1000000), 2)
-        ### RVOL
-        try:
-            rvol = round(int(vol) / int(avg_vol), 2)
-        except ZeroDivisionError:
-            rvol = 0
-        # avg_vol display
-        if int(avg_vol) > 1000000:
-            avs = round((int(avg_vol) / 1000000), 2)
-            display_avg_vol = f"{str(avs)}M"
-        else:
-            avs = round((int(avg_vol) / 1000), 2)
-            display_avg_vol = f"{str(avs)}K"
+    """
+    sources data from Yahoo Finance
+    args:
+        ticker(str): Ticker symbol
+    returns:
+        Dict of stats
+    """
 
-        # Get SI data
-        sis = wb.get_short_interest(stock=ticker)
-        # Loop through return dict, set var to last value (no need for prior mos)
-        if sis:
-            si_ = sis[0]['shortInterst']
-            dtc = round(float(sis[0]['daysToCover']), 2)
-            si_raw = si_
-            si_pct = round(((int(si_) / int(fff)) * 100), 2) if fff != 0 else 0
-        else:
-            mw_data = get_mktwatch_data(tckr=ticker)
-            si_raw = mw_data['si_raw']
-            dtc = mw_data['dtc']
-            si_pct = mw_data['si_pct']
+    # Pull datas from Yahoo Finance
+    tinf = yf.Ticker(ticker).info
+    avg_vol = tinf.get('averageVolume') or 0
+    vol = tinf.get('volume') or 0
+    fff = tinf.get('sharesOutstanding') or 0 # Float
+    cnm = tinf.get('shortName') or 'Missing Name' # Company name
+    open_price = tinf.get('regularMarketOpen') or 0
+    last_price = tinf.get('regularMarketPrice') or 0
+    prev_close = tinf.get('regularMarketPreviousClose') or 0
+    si_raw = tinf.get('sharesShort') or 0
+    si_pct = tinf.get('shortPercentOfFloat') or 0
+    si_pct = round((si_pct * 100), 2)
+    dtc = tinf.get('shortRatio') or 0
 
-        # Get number of relevant news stories
-        news_stories = get_news(ticker, cnm)
+    ### Manipulated datas
+    # Free Float
+    ffs = round((int(fff) / 1000000), 2)
+    # RVOL
+    try:
+        rvol = round(int(vol) / int(avg_vol), 2)
+    except ZeroDivisionError:
+        rvol = 0
+    # avg vol display
+    if int(avg_vol) > 1000000:
+        avs = round((int(avg_vol) / 1000000), 2)
+        display_avg_vol = f"{str(avs)}M"
+    else:
+        avs = round((int(avg_vol) / 1000), 2)
+        display_avg_vol = f"{str(avs)}K"
 
-        # Create a grade for the stock
-        grade = 0
-        # dicts for grades
-        rvol_grades = [1, 2, 5, 10]
-        ff_grades = [50, 25, 10, 2.5]
-        si_grades = [10, 20, 50, 100]
-        dtc_grades = [1, 2.5, 5, 7.5, 10]
-        news_grades = [0, 1]
-        # Set default grades
-        rvol_grade = 0
-        ff_grade = 0
-        si_grade = 0
-        dtc_grade = 0
-        news_grade = 0
-        # Set grades
-        for grade in rvol_grades:
-            rvol_grade += (1 / len(rvol_grades)) if rvol >= grade else 0
-        for grade in ff_grades:
-            ff_grade += (1 / len(ff_grades)) if ffs <= grade else 0
-        for grade in si_grades:
-            si_grade += (1 / len(si_grades)) if si_pct >= grade else 0
-        for grade in dtc_grades:
-            dtc_grade += (1 / len(dtc_grades)) if dtc >= grade else 0
-        for grade in news_grades:
-            news_grade += (1 / len(news_grades)) if news_stories > grade else 0
+    # News Stories
+    news_stories = get_news(ticker, cnm)
 
-        stock_grade = round((rvol_grade + ff_grade + si_grade + dtc_grade + news_grade), 2) * 2
+    # Create a grade for the stock
+    grade = 0
+    # dicts for grades
+    rvol_grades = [1, 2, 5, 10]
+    ff_grades = [50, 25, 10, 2.5]
+    si_grades = [10, 20, 50, 100]
+    dtc_grades = [1, 2.5, 5, 7.5, 10]
+    news_grades = [0, 1]
+    # Set default grades
+    rvol_grade = 0
+    ff_grade = 0
+    si_grade = 0
+    dtc_grade = 0
+    news_grade = 0
+    # Set grades
+    for grade in rvol_grades:
+        rvol_grade += (1 / len(rvol_grades)) if rvol >= grade else 0
+    for grade in ff_grades:
+        ff_grade += (1 / len(ff_grades)) if ffs <= grade else 0
+    for grade in si_grades:
+        si_grade += (1 / len(si_grades)) if si_pct >= grade else 0
+    for grade in dtc_grades:
+        dtc_grade += (1 / len(dtc_grades)) if dtc >= grade else 0
+    for grade in news_grades:
+        news_grade += (1 / len(news_grades)) if news_stories > grade else 0
 
-        ticker_dct = {
-            'ticker': ticker,
-            'name': cnm,
-            'rvol': rvol,
-            'rvol_grade': rvol_grade,
-            'avg_vol': int(avg_vol),
-            'display_avg_vol': display_avg_vol,
-            'display_free_float': f"{str(ffs)}M",
-            'free_float': ffs,
-            'ff_grade': ff_grade,
-            'display_short_interest': f"{str(si_pct)}%",
-            'short_interest': si_pct,
-            'si_grade': si_grade,
-            'display_si_raw': "{:,}".format(int(si_raw)),
-            'si_raw': si_raw,
-            'dtc': dtc,
-            'dtc_grade': dtc_grade,
-            'stories': news_stories,
-            'news_grade': news_grade,
-            'stock_grade': stock_grade,
-            'last_price': last_price,
-            'date_added': datetime.strftime(datetime.now(tz), "%m/%d/%Y")
-            }
+    stock_grade = round((rvol_grade + ff_grade + si_grade + dtc_grade + news_grade), 2) * 2
 
-        return ticker_dct
+    ticker_dct = {
+        'ticker': ticker,
+        'name': cnm,
+        'rvol': rvol,
+        'rvol_grade': rvol_grade,
+        'avg_vol': int(avg_vol),
+        'display_avg_vol': display_avg_vol,
+        'display_free_float': f"{str(ffs)}M",
+        'free_float': ffs,
+        'ff_grade': ff_grade,
+        'display_short_interest': f"{str(si_pct)}%",
+        'short_interest': si_pct,
+        'si_grade': si_grade,
+        'display_si_raw': "{:,}".format(int(si_raw)),
+        'si_raw': si_raw,
+        'dtc': dtc,
+        'dtc_grade': dtc_grade,
+        'stories': news_stories,
+        'news_grade': news_grade,
+        'stock_grade': stock_grade,
+        'last_price': last_price,
+        'date_added': datetime.strftime(datetime.now(tz), "%m/%d/%Y")
+        }
+
+    return ticker_dct
 
 
 def get_news(tckr, company):
@@ -271,57 +253,6 @@ def get_news(tckr, company):
         return_val = matches
 
     return return_val
-
-
-def get_mktwatch_data(tckr):
-    url = f'https://fintel.io/ss/us/{tckr}'
-    page = requests.get(url)
-    soup = bs(page.content, 'html.parser')
-    tds = soup.find_all("td")
-
-    headr = ""
-    si_raw = 0
-    si_pct = 0
-    dtc = 0
-
-    for i in tds[:30]:
-        # Get the actual data based on the header, which is obtained in the second
-        #   part of this loop
-        if headr == "Short Interest":
-            try:
-                si_raw = int(i.contents[0].
-                    replace("\n", "").
-                    replace(" shares- ", "").
-                    replace(",", ""))
-            except:
-                si_raw = 0
-            headr = ""
-        # days to cover
-        elif headr == "Short Interest Ratio":
-            try:
-                dtc = float(i.contents[0].replace(" Days to Cover", ""))
-            except:
-                dtc = 0
-            headr = ""
-        elif headr == "Short Interest % Float":
-            # String maniuplation
-            try:
-                si_pct = float(i.contents[0].
-                replace("\n", "").
-                replace("%- ", ""))
-            except:
-                si_pct = 0
-            headr = ""
-
-        # Get the header - The next iteration should contain the data you want
-        if i.contents == ["Short Interest"]:
-            headr = "Short Interest"
-        elif i.contents == ["Short Interest Ratio"]:
-            headr = "Short Interest Ratio"
-        elif i.contents == ["Short Interest % Float"]:
-            headr = "Short Interest % Float"
-
-    return ({'dtc': dtc, 'si_raw': si_raw, 'si_pct': si_pct})
 
 
 def analyze_watchlist():
