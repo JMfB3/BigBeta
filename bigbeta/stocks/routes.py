@@ -5,6 +5,7 @@ Stocks Watchlist Routes
 import os
 import json
 from datetime import datetime
+from pytz import timezone
 
 from flask import render_template, request, redirect, url_for, Blueprint
 from flask_login import current_user, login_required
@@ -15,6 +16,24 @@ from bigbeta.stocks.utils import search_ticker, remove_from_watchlist
 
 
 stocks = Blueprint('stocks', __name__)
+
+
+# Get current time to direct to correct page
+tz = timezone("US/Eastern")
+rn = datetime.now(tz).time()
+weekday = datetime.now(tz).weekday()
+pre_mkt_opn = datetime.strptime("04:00:00", "%H:%M:%S").time()
+aft_hrs_cls = datetime.strptime("20:00:00", "%H:%M:%S").time()
+mkt_opn = datetime.strptime("09:30:00", "%H:%M:%S").time()
+mkt_cls = datetime.strptime("16:00:00", "%H:%M:%S").time()
+if weekday >= 5:
+    rank_type = "afterMarket"
+elif rn < pre_mkt_opn or rn > mkt_cls:
+    rank_type = "afterMarket"
+elif rn < mkt_opn:
+    rank_type = "preMarket"
+elif rn > mkt_opn and rn < mkt_cls:
+    rank_type = "1d"
 
 
 @stocks.route("/stocks", methods=["GET", "POST"])
@@ -29,9 +48,9 @@ def top_gainers():
     except:
         cuser_id = -1
     # Get most recently run file and load into table
-    with open(f"{cur_wd}/bigbeta/stocks/current_run/current_data.json", "r") as f:
+    with open(f"{cur_wd}/bigbeta/stocks/current_run/{rank_type}/current_data.json", "r") as f:
         watchlist = json.load(f)
-    with open(f"{cur_wd}/bigbeta/stocks/current_run/last_run.txt", "r") as f:
+    with open(f"{cur_wd}/bigbeta/stocks/current_run/{rank_type}/last_run.txt", "r") as f:
         run_time_display = f.read()
     # Get all stocks searched. If none, return empty list (resulting in empty table)
     # TODO: At some point should add functionality to clear the list
