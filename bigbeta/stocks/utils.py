@@ -58,14 +58,19 @@ def build_watchlist(wl_cnt=15, dir="gainer"):
     # Determine which watchlist to build (premarket, 1d, afterhours)
     tz = timezone("US/Eastern")
     rn = datetime.now(tz).time()
+    weekday = datetime.now(tz).weekday()
+    pre_mkt_opn = datetime.strptime("04:00:00", "%H:%M:%S").time()
+    aft_hrs_cls = datetime.strptime("20:00:00", "%H:%M:%S").time()
     mkt_opn = datetime.strptime("09:30:00", "%H:%M:%S").time()
     mkt_cls = datetime.strptime("16:00:00", "%H:%M:%S").time()
-    if rn < mkt_opn:
+    if weekday >= 5:
+        rank_type = "afterMarket"
+    elif rn < pre_mkt_opn or rn > mkt_cls:
+        rank_type = "afterMarket"
+    elif rn < mkt_opn:
         rank_type = "preMarket"
     elif rn > mkt_opn and rn < mkt_cls:
         rank_type = "1d"
-    elif rn > mkt_cls:
-        rank_type = "afterMarket"
 
     # Ping WeBull
     l_watchlist = []
@@ -78,14 +83,14 @@ def build_watchlist(wl_cnt=15, dir="gainer"):
         l_watchlist.append(ticker_dct)
 
     # Write data out to file for storage
-    with open(f"{cur_wd}/bigbeta/stocks/history/dt_{cur_dt}__tm__{cur_tm}.json", "w") as f:
+    with open(f"{cur_wd}/bigbeta/stocks/history/{rank_type}/dt_{cur_dt}__tm__{cur_tm}.json", "w") as f:
         json.dump(l_watchlist, f)
     # Write it out again to an overwritten file for easy retrieval
-    with open(f"{cur_wd}/bigbeta/stocks/current_run/current_data.json", "w") as f:
+    with open(f"{cur_wd}/bigbeta/stocks/current_run/{rank_type}/current_data.json", "w") as f:
         json.dump(l_watchlist, f)
     # Writes out time of last run
-    with open(f"{cur_wd}/bigbeta/stocks/current_run/last_run.txt", "w") as f:
-        f.write(f"{rank_type} at {cur_tm_log} EST")
+    with open(f"{cur_wd}/bigbeta/stocks/current_run/{rank_type}/last_run.txt", "w") as f:
+        f.write(f"{rank_type} last ran at {cur_tm_log} EST")
 
     return l_watchlist
 
