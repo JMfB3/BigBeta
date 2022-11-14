@@ -18,29 +18,28 @@ from bigbeta.stocks.utils import search_ticker, remove_from_watchlist
 stocks = Blueprint('stocks', __name__)
 
 
-# Get current time to direct to correct page
-tz = timezone("US/Eastern")
-rn = datetime.now(tz).time()
-weekday = datetime.now(tz).weekday()
-pre_mkt_opn = datetime.strptime("04:00:00", "%H:%M:%S").time()
-aft_hrs_cls = datetime.strptime("20:00:00", "%H:%M:%S").time()
-mkt_opn = datetime.strptime("09:30:00", "%H:%M:%S").time()
-mkt_cls = datetime.strptime("16:00:00", "%H:%M:%S").time()
-if weekday >= 5:
-    rank_type = "afterMarket"
-elif rn < pre_mkt_opn or rn > mkt_cls:
-    rank_type = "afterMarket"
-elif rn < mkt_opn:
-    rank_type = "preMarket"
-elif rn > mkt_opn and rn < mkt_cls:
-    rank_type = "1d"
-
-
 @stocks.route("/stocks", methods=["GET", "POST"])
 def top_gainers():
     """
     Same as top_gainers, but includes extra features for theta users
     """
+    # Get current time to direct to correct page
+    tz = timezone("US/Eastern")
+    rn = datetime.now(tz).time()
+    weekday = datetime.now(tz).weekday()
+    pre_mkt_opn = datetime.strptime("04:00:00", "%H:%M:%S").time()
+    aft_hrs_cls = datetime.strptime("20:00:00", "%H:%M:%S").time()
+    mkt_opn = datetime.strptime("09:30:00", "%H:%M:%S").time()
+    mkt_cls = datetime.strptime("16:00:00", "%H:%M:%S").time()
+    if weekday >= 5:
+        rank_type = "afterMarket"
+    elif rn < pre_mkt_opn or rn > mkt_cls:
+        rank_type = "afterMarket"
+    elif rn < mkt_opn:
+        rank_type = "preMarket"
+    elif rn > mkt_opn and rn < mkt_cls:
+        rank_type = "1d"
+
 
     cur_wd = os.getcwd()
     try:
