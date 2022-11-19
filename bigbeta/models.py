@@ -47,7 +47,8 @@ class User(db.Model, UserMixin):
 
 class Post(db.Model):
     """
-    This is probably comparable to a climb class
+    Class for user posts.
+    Not totally necessary for current state of site 
     """
 
     id = db.Column(db.Integer, primary_key=True)

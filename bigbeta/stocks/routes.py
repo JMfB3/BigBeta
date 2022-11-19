@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 from pytz import timezone
 
-from flask import render_template, request, redirect, url_for, Blueprint
+from flask import render_template, request, redirect, url_for, Blueprint, flash
 from flask_login import current_user, login_required
 
 from bigbeta import db, bcrypt
@@ -68,9 +68,15 @@ def top_gainers():
         #   Then add the updated data of the searched stock to the list
         #   Then write the new list to the user search file, which will be loaded on redirect
         remove_from_watchlist(search_form.tckr_input.data)
+        # Load current list
         with open(f"{cur_wd}/bigbeta/stocks/user_search/{current_user.id}_searches.json", "r") as f:
             updated_search_list = json.load(f)
-        updated_search_list.append(search_ticker(search_form.tckr_input.data))
+        # Get data on searched ticker and add it to list
+        try:
+            updated_search_list.append(search_ticker(search_form.tckr_input.data))
+        except:
+            flash("Ticker not found - Please check spelling", "danger")
+        # Save updated list and load the page with it
         with open(f"{cur_wd}/bigbeta/stocks/user_search/{current_user.id}_searches.json", "w") as f:
             json.dump(updated_search_list, f)
         return redirect(url_for("stocks.top_gainers"))

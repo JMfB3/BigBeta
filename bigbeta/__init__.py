@@ -64,7 +64,7 @@ def create_app(config_class=Config):
 def create_app_context(confif_class=Config):
     """
     Creates app context for use by cron jobs or other external services.
-        Using the above create_app function will result in circular import errors 
+        Using the above create_app function will result in circular import errors
     """
     app = Flask(__name__)
     app.config.from_object(Config)
