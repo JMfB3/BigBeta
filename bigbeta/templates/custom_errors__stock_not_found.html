@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section">
+        <h1>404 Error - Couldn't find that ticker</h1>
+        <p>Did you type it in correctly?</p>
+        <p>Fun fact: Australia is wider than the moon!</p>
+        <a class="ml-2" href="{{ url_for('stocks.top_gainers') }}">Return to Top Gainers Page</a>
+    </div>
+{% endblock content %}

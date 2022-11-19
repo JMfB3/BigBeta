@@ -23,3 +23,12 @@ def home():
 @main.route("/about")
 def about():
     return render_template('about.html', title='About')
+
+
+@main.route("/stock_not_found")
+def custom_error__stock_not_found():
+    """
+    If a stock is not found in a user's search, return this page
+    """
+
+    return render_template("custom_errors__stock_not_found.html")

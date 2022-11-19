@@ -23,7 +23,7 @@ class RegistrationForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password',
                                      validators=[DataRequired(), EqualTo('password')])
     remember = BooleanField('Remember Me')
-    submit = SubmitField('Get Climbing!')
+    submit = SubmitField('Sign Up!')
 
 
     def validate_username(self, username):
@@ -48,7 +48,7 @@ class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember = BooleanField('Remember Me')
-    submit = SubmitField('Get Climbing!')
+    submit = SubmitField('Login')
 
 
 class UpdateAccountForm(FlaskForm):
