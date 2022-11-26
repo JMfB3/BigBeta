@@ -24,6 +24,27 @@ tz = timezone("US/Eastern")
 cur_dt = datetime.strftime(datetime.now(tz), "%Y_%m_%d")
 cur_tm = datetime.strftime(datetime.now(tz), "%H_%M")
 cur_tm_log = datetime.strftime(datetime.now(tz), "%H:%M:%S")
+print(f"{cur_dt} {cur_tm} \nSetting global vars.")
+
+
+# Determine (premarket, 1d, afterhours) - Use for building watchlist, file storage vars
+tz = timezone("US/Eastern")
+rn = datetime.now(tz).time()
+weekday = datetime.now(tz).weekday()
+pre_mkt_opn = datetime.strptime("04:00:00", "%H:%M:%S").time()
+aft_hrs_cls = datetime.strptime("20:00:00", "%H:%M:%S").time()
+mkt_opn = datetime.strptime("09:30:00", "%H:%M:%S").time()
+mkt_cls = datetime.strptime("16:00:00", "%H:%M:%S").time()
+if weekday >= 5:
+    rank_type = "afterMarket"
+elif rn < pre_mkt_opn or rn > mkt_cls:
+    rank_type = "afterMarket"
+elif rn < mkt_opn:
+    rank_type = "preMarket"
+elif rn > mkt_opn and rn < mkt_cls:
+    rank_type = "1d"
+print(rank_type)
+
 ##########
 # Keep for dev env
 wb_user = os.environ.get('WB_USER')
@@ -43,6 +64,7 @@ if not email_sender:
         config = json.load(config_file)
     email_sender = config.get('EMAIL_USER')
 wb.login(username=wb_user, password=wb_pass)
+print("Logged into WeBull")
 ########## End login block
 
 # Set app context
@@ -55,33 +77,20 @@ def build_watchlist(wl_cnt=15, dir="gainer"):
     Rank Types: preMarket / afterMarket / 5min / 1d / 5d / 1m / 3m / 52w
     """
 
-    # Determine which watchlist to build (premarket, 1d, afterhours)
-    tz = timezone("US/Eastern")
-    rn = datetime.now(tz).time()
-    weekday = datetime.now(tz).weekday()
-    pre_mkt_opn = datetime.strptime("04:00:00", "%H:%M:%S").time()
-    aft_hrs_cls = datetime.strptime("20:00:00", "%H:%M:%S").time()
-    mkt_opn = datetime.strptime("09:30:00", "%H:%M:%S").time()
-    mkt_cls = datetime.strptime("16:00:00", "%H:%M:%S").time()
-    if weekday >= 5:
-        rank_type = "afterMarket"
-    elif rn < pre_mkt_opn or rn > mkt_cls:
-        rank_type = "afterMarket"
-    elif rn < mkt_opn:
-        rank_type = "preMarket"
-    elif rn > mkt_opn and rn < mkt_cls:
-        rank_type = "1d"
-
+    print("Running build_watchlist function")
     # Ping WeBull
     l_watchlist = []
     premkt_gnrs = wb.active_gainer_loser(direction=dir, rank_type=rank_type, count=wl_cnt)
     ### Must dig into list within list
     l_tickers = [r["ticker"]["symbol"] for r in premkt_gnrs["data"]]
+    print(f"Watchlist: {l_tickers}")
     for ticker in l_tickers:
+        print(f"Getting fundamentals for {ticker}")
         ticker_dct = fundamentals(ticker)
         #### Add to full DF to be reported at end of processing
         l_watchlist.append(ticker_dct)
 
+    print("Built watchlist. Writing data out to files.")
     # Write data out to file for storage
     with open(f"{cur_wd}/bigbeta/stocks/history/{rank_type}/dt_{cur_dt}__tm__{cur_tm}.json", "w") as f:
         json.dump(l_watchlist, f)
@@ -92,6 +101,7 @@ def build_watchlist(wl_cnt=15, dir="gainer"):
     with open(f"{cur_wd}/bigbeta/stocks/current_run/{rank_type}/last_run.txt", "w") as f:
         f.write(f"{rank_type} last ran at {cur_tm_log} EST")
 
+    print("Finished build_watchlist.")
     return l_watchlist
 
 
@@ -111,6 +121,7 @@ def remove_from_watchlist(tckr_to_rm):
     Removes a ticker from the current user's watchlist
     """
 
+    print(f"Running remove_from_watchlist function [{tckr_to_rm}]")
     try:
         with open(f"{cur_wd}/bigbeta/stocks/user_search/{current_user.id}_searches.json", "r") as f:
             search_list = json.load(f)
@@ -125,20 +136,22 @@ def remove_from_watchlist(tckr_to_rm):
     with open(f"{cur_wd}/bigbeta/stocks/user_search/{current_user.id}_searches.json", "w") as f:
         json.dump(overwrite_list, f)
 
+    print("Finished remove_from_watchlist")
     return overwrite_list
 
 
-def get_stock(ticker):
-    l = []
-    f = fundamentals(ticker)
-    l.append(f)
-    fdf = pd.DataFrame(l)
-    return fdf
+# Not used?
+# def get_stock(ticker):
+#     l = []
+#     f = fundamentals(ticker)
+#     l.append(f)
+#     fdf = pd.DataFrame(l)
+#     return fdf
 
 
 def fundamentals(ticker):
     """
-    sources data from Yahoo Finance
+    Gets data about a ticker. Sources: Yahoo Finance, WeBull
     args:
         ticker(str): Ticker symbol
     returns:
@@ -146,20 +159,22 @@ def fundamentals(ticker):
     """
 
     # Pull datas from Yahoo Finance
-    tinf = yf.Ticker(ticker).info
-    avg_vol = tinf.get('averageVolume') or 0
-    vol = tinf.get('volume') or 0
-    fff = tinf.get('sharesOutstanding') or 0 # Float
-    cnm = tinf.get('shortName') or 'Missing Name' # Company name
-    open_price = tinf.get('regularMarketOpen') or 0
-    last_price = tinf.get('regularMarketPrice') or 0
-    prev_close = tinf.get('regularMarketPreviousClose') or 0
-    si_raw = tinf.get('sharesShort') or 0
-    si_pct = tinf.get('shortPercentOfFloat') or 0
-    si_pct = round((si_pct * 100), 2)
-    dtc = tinf.get('shortRatio') or 0
+    yf_data = yf.Ticker(ticker).info
+    wb_data = wb.get_quote(stock=ticker)
 
-    ### Manipulated datas
+    avg_vol = yf_data.get("averageVolume") or 0
+    vol = wb_data.get("volume") or 0
+    fff = yf_data.get("sharesOutstanding") or 0 # Float
+    cnm = yf_data.get("shortName") or "Missing Name" # Company name
+    open_price = yf_data.get("regularMarketOpen") or 0
+    last_price = yf_data.get("regularMarketPrice") or 0
+    prev_close = yf_data.get("regularMarketPreviousClose") or 0
+    si_raw = yf_data.get("sharesShort") or 0
+    si_pct = yf_data.get("shortPercentOfFloat") or 0
+    si_pct = round((si_pct * 100), 2)
+    dtc = yf_data.get("shortRatio") or 0
+
+    ### Derived datums
     # Free Float
     ffs = round((int(fff) / 1000000), 2)
     # RVOL
@@ -193,16 +208,17 @@ def fundamentals(ticker):
     dtc_grade = 0
     news_grade = 0
     # Set grades
+    # rvol:0.5, ff:0.75, si:0.25, dtc:1, news:0
     for grade in rvol_grades:
-        rvol_grade += (1 / len(rvol_grades)) if rvol >= grade else 0
+        rvol_grade += (1 / len(rvol_grades)) if rvol >= grade and rvol != 0 else 0
     for grade in ff_grades:
-        ff_grade += (1 / len(ff_grades)) if ffs <= grade else 0
+        ff_grade += (1 / len(ff_grades)) if ffs <= grade and ffs != 0 else 0
     for grade in si_grades:
-        si_grade += (1 / len(si_grades)) if si_pct >= grade else 0
+        si_grade += (1 / len(si_grades)) if si_pct >= grade and si_pct != 0 else 0
     for grade in dtc_grades:
-        dtc_grade += (1 / len(dtc_grades)) if dtc >= grade else 0
+        dtc_grade += (1 / len(dtc_grades)) if dtc >= grade and dtc != 0 else 0
     for grade in news_grades:
-        news_grade += (1 / len(news_grades)) if news_stories > grade else 0
+        news_grade += (1 / len(news_grades)) if news_stories > grade and news_stories != 0 else 0
 
     stock_grade = round((rvol_grade + ff_grade + si_grade + dtc_grade + news_grade), 2) * 2
 
@@ -268,8 +284,9 @@ def analyze_watchlist():
     Returns: None
     """
 
+    print("Running analyze_watchlist function")
     # Open current watchlist, create new list finding stocks with >100% short interest
-    with open(f"{cur_wd}/bigbeta/stocks/current_run/current_data.json", "r") as f:
+    with open(f"{cur_wd}/bigbeta/stocks/current_run/{rank_type}/current_data.json", "r") as f:
         watchlist = json.load(f)
     outrageous_stocks = [stock for stock in watchlist if stock['short_interest'] > 100]
     notification_time = datetime.strftime(datetime.now(tz), "%H:%M")
@@ -294,7 +311,6 @@ def analyze_watchlist():
     #   (based on above-created list) and then send a notification about the stock
     for outrageous_stock in outrageous_stocks:
         if outrageous_stock['ticker'] not in ntfctns_sent_today:
-            print(outrageous_stock)
             stock_email_blast(outrageous_stock, notification_time=notification_time)
             ###### WRITE FILES WITHIN THE OUTRAGEOUS STOCKS LOOP WITH THE STOCK'S NAME!
 
@@ -304,6 +320,8 @@ def analyze_watchlist():
         os.makedirs(today_path)
     with open(f"{today_path}/{cur_tm}.json", "w") as f:
         json.dump(outrageous_stocks, f)
+
+    print("Finished running analyze_watchlist")
     return None
 
 
@@ -383,6 +401,5 @@ def build_users_list():
     with bigbeta_app.app_context():
         users = User.query.all()
     user_emails = [user.email for user in users]
-    print(user_emails)
 
     return user_emails
