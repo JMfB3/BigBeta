@@ -4,7 +4,7 @@ bs4
 certifi
 cffi
 Click==7.0
-Flask==1.0.4
+Flask==2.3.2
 Flask-Admin
 Flask-AppBuilder
 Flask-Babel
